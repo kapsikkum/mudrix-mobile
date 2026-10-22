@@ -41,6 +41,14 @@ jobs:
       - name: Generate the Xcode project
         run: npx tauri ios init --ci
 
+      - name: Apply the app icon
+        run: |
+          # `tauri ios init` generates the Xcode project; regenerate the icons so its asset catalog uses ours.
+          npx tauri icon app-icon.png
+          ls src-tauri/gen/apple/Assets.xcassets/AppIcon.appiconset | head -30
+          # Make sure the iOS set is in the catalog even if the CLI only wrote it under src-tauri/icons.
+          cp -f src-tauri/icons/ios/*.png src-tauri/gen/apple/Assets.xcassets/AppIcon.appiconset/ || true
+
       - name: Disable code signing in the Xcode project
         run: |
           PBX=src-tauri/gen/apple/mudrix-mobile.xcodeproj/project.pbxproj
