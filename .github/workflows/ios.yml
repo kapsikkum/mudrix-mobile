@@ -1,0 +1,81 @@
+name: iOS (unsigned IPA)
+
+# Builds an unsigned .ipa for sideloading (AltStore, Sideloadly, TrollStore re-sign it with your
+# own Apple ID). Runs on a macOS runner because Xcode is required; nothing here needs a paid
+# Apple Developer account.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the web client
+        run: npm run build:web
+
+      - name: Generate the Xcode project
+        run: npx tauri ios init --ci
+
+      - name: Build (unsigned)
+        run: |
+          set -euo pipefail
+          cd src-tauri/gen/apple
+          xcodebuild \
+            -project mudrix-mobile.xcodeproj \
+            -scheme mudrix-mobile_iOS \
+            -configuration release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package the IPA
+        run: |
+          set -euo pipefail
+          APP="$(find src-tauri/gen/apple/build -type d -name '*.app' -path '*Release-iphoneos*' | head -1)"
+          test -n "$APP"
+          mkdir -p ipa/Payload
+          cp -R "$APP" ipa/Payload/
+          (cd ipa && zip -qry ../Mudrix-unsigned.ipa Payload)
+          shasum -a 256 Mudrix-unsigned.ipa | tee Mudrix-unsigned.ipa.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Mudrix-unsigned-ipa
+          path: |
+            Mudrix-unsigned.ipa
+            Mudrix-unsigned.ipa.sha256
+
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Mudrix-unsigned.ipa
+            Mudrix-unsigned.ipa.sha256

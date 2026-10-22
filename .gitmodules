@@ -1,0 +1,3 @@
+[submodule "mudrix-web"]
+	path = mudrix-web
+	url = https://github.com/kapsikkum/mudrix-web.git
