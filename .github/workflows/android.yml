@@ -33,7 +33,7 @@ jobs:
           echo "ANDROID_HOME=$ANDROID_HOME"; ls "$ANDROID_HOME" || true
           SDKM="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)"
           yes | "$SDKM" --licenses >/dev/null || true
-          "$SDKM" "ndk;27.2.12479018" "platforms;android-37"
+          "$SDKM" "ndk;27.2.12479018" "platforms;android-37.0"
           ls "$ANDROID_HOME/ndk"
 
       - uses: dtolnay/rust-toolchain@stable
