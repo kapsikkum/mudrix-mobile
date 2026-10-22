@@ -43,22 +43,15 @@ jobs:
 
       - name: Build (unsigned)
         run: |
-          set -euo pipefail
-          cd src-tauri/gen/apple
-          xcodebuild \
-            -project mudrix-mobile.xcodeproj \
-            -scheme mudrix-mobile_iOS \
-            -configuration release \
-            -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            build
+          # The Tauri CLI has to run while Xcode builds (its Rust build phase talks to it). Export and
+          # signing are expected to fail without an Apple account; the unsigned .app is what we keep.
+          npx tauri ios build --ci --export-method debugging || true
+          find src-tauri -name '*.app' -maxdepth 8 | head
 
       - name: Package the IPA
         run: |
           set -euo pipefail
-          APP="$(find src-tauri/gen/apple/build -type d -name '*.app' -path '*Release-iphoneos*' | head -1)"
+          APP="$(find src-tauri /Users/runner/Library/Developer/Xcode -type d -name '*.app' -path '*iphoneos*' 2>/dev/null | head -1)"
           test -n "$APP"
           mkdir -p ipa/Payload
           cp -R "$APP" ipa/Payload/

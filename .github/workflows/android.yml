@@ -43,9 +43,9 @@ jobs:
         run: npm ci
 
       - name: Build the APK
-        env:
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
-        run: npx tauri android build --apk --debug
+        run: |
+          export NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
+          npx tauri android build --apk --debug
 
       - name: Collect
         run: |
