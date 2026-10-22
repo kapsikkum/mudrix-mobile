@@ -29,7 +29,11 @@ jobs:
           java-version: 21
 
       - name: Install the NDK
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;27.2.12479018" "platforms;android-37" || true
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"; ls "$ANDROID_HOME" || true
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "ndk;27.2.12479018" "platforms;android-37"
+          ls "$ANDROID_HOME/ndk"
 
       - uses: dtolnay/rust-toolchain@stable
         with:

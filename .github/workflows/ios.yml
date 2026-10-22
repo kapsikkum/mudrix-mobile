@@ -41,6 +41,12 @@ jobs:
       - name: Generate the Xcode project
         run: npx tauri ios init --ci
 
+      - name: Disable code signing in the Xcode project
+        run: |
+          PBX=src-tauri/gen/apple/mudrix-mobile.xcodeproj/project.pbxproj
+          perl -pi -e 's/buildSettings = \{/buildSettings = { CODE_SIGNING_ALLOWED = NO; CODE_SIGNING_REQUIRED = NO; CODE_SIGN_IDENTITY = "";/g' "$PBX"
+          grep -c CODE_SIGNING_ALLOWED "$PBX"
+
       - name: Build (unsigned)
         run: |
           # The Tauri CLI has to run while Xcode builds (its Rust build phase talks to it). Export and
