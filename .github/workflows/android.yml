@@ -28,10 +28,8 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
-
       - name: Install the NDK
-        run: sdkmanager "ndk;27.2.12479018" "platforms;android-37"
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;27.2.12479018" "platforms;android-37" || true
 
       - uses: dtolnay/rust-toolchain@stable
         with:
