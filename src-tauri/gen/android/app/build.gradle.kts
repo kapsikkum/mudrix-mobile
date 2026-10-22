@@ -71,6 +71,7 @@ rust {
 
 dependencies {
     implementation("androidx.webkit:webkit:1.14.0")
+    implementation("org.unifiedpush.android:connector:3.3.5")
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("com.google.android.material:material:1.12.0")

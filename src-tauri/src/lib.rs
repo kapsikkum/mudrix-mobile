@@ -6,13 +6,17 @@
 //! neutral values, so the same web build runs unchanged.
 
 mod commands;
+mod push;
 
 use tauri::Manager;
 use tauri_plugin_deep_link::DeepLinkExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(target_os = "android")]
+    let builder = builder.plugin(push::init());
+    builder
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
@@ -46,6 +50,9 @@ pub fn run() {
             commands::set_app_icon,
             commands::check_for_updates,
             commands::install_update,
+            push::push_status,
+            push::push_register,
+            push::push_unregister,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Mudrix");
