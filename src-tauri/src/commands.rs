@@ -78,14 +78,48 @@ pub fn show_notification(
     title: String,
     body: String,
     roomUrl: Option<String>,
+    sound: Option<String>,
 ) -> Result<(), String> {
     let _ = roomUrl; // opening the room from a tap needs the native notification action hooks
-    app.notification()
-        .builder()
-        .title(title)
-        .body(body)
-        .show()
-        .map_err(|e| e.to_string())
+    let builder = app.notification().builder().title(title).body(body);
+    #[cfg(target_os = "android")]
+    let builder = match message_channel(&app, sound.as_deref()) {
+        Some(channel) => builder.channel_id(channel),
+        None => builder,
+    };
+    #[cfg(not(target_os = "android"))]
+    let _ = sound;
+    builder.show().map_err(|e| e.to_string())
+}
+
+/// Android picks a notification's sound from its channel, which cannot change once created. So each
+/// sound the user can choose gets its own channel ("msg_<sound>", the sound being a bundled
+/// `res/raw` file), and "silent" gets a channel without a sound.
+#[cfg(target_os = "android")]
+fn message_channel(app: &AppHandle, sound: Option<&str>) -> Option<String> {
+    use tauri_plugin_notification::{Channel, Importance};
+
+    let sound = sound?;
+    let valid = !sound.is_empty()
+        && sound
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_');
+    if !valid {
+        return None;
+    }
+    let channel = if sound == "silent" {
+        Channel::builder("msg_silent", "Messages (silent)")
+            .importance(Importance::Low)
+            .build()
+    } else {
+        Channel::builder(format!("msg_{sound}"), "Messages")
+            .importance(Importance::High)
+            .sound(sound)
+            .build()
+    };
+    let id = channel.id().to_string();
+    app.notification().create_channel(channel).ok()?;
+    Some(id)
 }
 
 #[tauri::command]
