@@ -1,7 +1,8 @@
 name: Android (APK)
 
-# Builds debug-signed APKs for sideloading. Release signing with your own keystore can be added
-# later through repository secrets.
+# Builds a release-signed APK when the ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+# ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD repository secrets exist (see "Release signing" in the
+# README); otherwise falls back to a debug-signed APK, named as such.
 on:
   workflow_dispatch:
   push:
@@ -47,17 +48,53 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build the APK
+      - name: Prepare release signing
+        id: signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
+            printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+            echo "keystore=$RUNNER_TEMP/release.keystore" >> "$GITHUB_OUTPUT"
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Signing secrets are not set; building a debug APK."
+          fi
+
+      - name: Build the release APK
+        if: steps.signing.outputs.signed == 'true'
+        env:
+          KEYSTORE_PATH: ${{ steps.signing.outputs.keystore }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          export NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
+          export ANDROID_KEYSTORE_PATH="$KEYSTORE_PATH"
+          export ANDROID_KEYSTORE_PASSWORD="$KEYSTORE_PASSWORD"
+          export ANDROID_KEY_ALIAS="$KEY_ALIAS"
+          export ANDROID_KEY_PASSWORD="$KEY_PASSWORD"
+          npx tauri android build --apk
+
+      - name: Build the debug APK
+        if: steps.signing.outputs.signed != 'true'
         run: |
           export NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
           npx tauri android build --apk --debug
 
       - name: Collect
+        env:
+          VARIANT: ${{ steps.signing.outputs.signed == 'true' && 'release' || 'debug' }}
         run: |
           set -euo pipefail
           mkdir -p out
           find src-tauri/gen/android/app/build/outputs/apk -name '*.apk' -exec cp {} out/ \;
-          (cd out && for f in *.apk; do mv "$f" "Mudrix-$f"; done; sha256sum *.apk > SHA256SUMS.txt)
+          (cd out && for f in *.apk; do mv "$f" "Mudrix-$VARIANT-$f"; done; sha256sum *.apk > SHA256SUMS.txt)
           ls -la out
 
       - uses: actions/upload-artifact@v4
