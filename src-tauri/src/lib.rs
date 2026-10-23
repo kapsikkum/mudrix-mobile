@@ -15,6 +15,9 @@ pub fn run() {
     let builder = tauri::Builder::default();
     #[cfg(target_os = "android")]
     let builder = builder.plugin(push::init());
+    // No scrolling or panning of the web view, and a web view that ends at the keyboard.
+    #[cfg(target_os = "ios")]
+    let builder = builder.plugin(tauri_plugin_ios_webview::init());
     builder
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_notification::init())
