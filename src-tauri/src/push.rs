@@ -70,3 +70,16 @@ pub async fn push_unregister(app: AppHandle) -> Result<(), String> {
         Ok(())
     }
 }
+
+#[tauri::command]
+pub async fn push_keepalive(app: AppHandle, enabled: bool) -> Result<(), String> {
+    #[cfg(target_os = "android")]
+    {
+        call(&app, "setKeepAlive", json!({ "enabled": enabled })).map(|_| ())
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = (app, enabled);
+        Err("not supported on this platform".into())
+    }
+}

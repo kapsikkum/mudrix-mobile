@@ -53,6 +53,7 @@ pub fn run() {
             push::push_status,
             push::push_register,
             push::push_unregister,
+            push::push_keepalive,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Mudrix");

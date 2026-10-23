@@ -19,4 +19,10 @@ object PushStore {
   fun setError(context: Context, reason: String?) {
     prefs(context).edit().putString("error", reason).apply()
   }
+
+  fun keepAlive(context: Context): Boolean = prefs(context).getBoolean("keepAlive", false)
+
+  fun setKeepAlive(context: Context, enabled: Boolean) {
+    prefs(context).edit().putBoolean("keepAlive", enabled).apply()
+  }
 }

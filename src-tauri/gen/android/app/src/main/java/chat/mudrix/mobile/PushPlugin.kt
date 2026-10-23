@@ -39,6 +39,7 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
     result.put("endpoint", PushStore.endpoint(context))
     result.put("error", PushStore.error(context))
     result.put("notificationsAllowed", notificationsAllowed())
+    result.put("keepAlive", PushStore.keepAlive(context))
     invoke.resolve(result)
   }
 
@@ -56,6 +57,23 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
     PushStore.setError(context, null)
     UnifiedPush.saveDistributor(context, distributor)
     UnifiedPush.register(context)
+    invoke.resolve()
+  }
+
+  @InvokeArg
+  class KeepAliveArgs {
+    var enabled: Boolean = false
+  }
+
+  /** Starts or stops the foreground service that keeps the app connected without a distributor. */
+  @Command
+  fun setKeepAlive(invoke: Invoke) {
+    val args = invoke.parseArgs(KeepAliveArgs::class.java)
+    if (args.enabled && !notificationsAllowed()) {
+      ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 4711)
+    }
+    PushStore.setKeepAlive(context, args.enabled)
+    KeepAliveService.apply(context, args.enabled)
     invoke.resolve()
   }
 

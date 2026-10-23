@@ -18,6 +18,8 @@ class MainActivity : TauriActivity() {
     )
     super.onCreate(savedInstanceState)
 
+    if (PushStore.keepAlive(this)) KeepAliveService.apply(this, true)
+
     window.setBackgroundDrawable(ColorDrawable(0xFF050505.toInt()))
 
     // Keep the web view out of the status bar, the camera cutout, the navigation/gesture bar and the
