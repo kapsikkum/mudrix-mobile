@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -31,7 +32,10 @@ object PushNotifier {
     var roomId: String? = null
     try {
       val n = JSONObject(payload).optJSONObject("notification")
-      if (n != null) {
+      // With the event_id_only format, a push without an event_id is an unread-count update
+      // (messages read elsewhere), not a message.
+      if (n == null || n.optString("event_id").isEmpty()) return
+      run {
         roomId = n.optString("room_id").ifEmpty { null }
         val room = n.optString("room_name")
         val sender = n.optString("sender_display_name")
@@ -49,12 +53,24 @@ object PushNotifier {
         NotificationChannel(CHANNEL, "Messages", NotificationManager.IMPORTANCE_HIGH)
       )
     }
-    val open = Intent(context, MainActivity::class.java).apply {
-      flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-      if (roomId != null) putExtra("roomId", roomId)
+    // The deep-link plugin routes matrix:roomid/<id without "!"> to the room in the web app.
+    val room = roomId
+    val open: Intent = if (room != null) {
+      Intent(
+        Intent.ACTION_VIEW,
+        Uri.parse("matrix:roomid/" + Uri.encode(room.removePrefix("!"))),
+        context,
+        MainActivity::class.java
+      )
+    } else {
+      Intent(context, MainActivity::class.java)
     }
+    open.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
     val pending = PendingIntent.getActivity(
-      context, 0, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+      context,
+      roomId?.hashCode() ?: 0,
+      open,
+      PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
     val notification = NotificationCompat.Builder(context, CHANNEL)
       .setSmallIcon(android.R.drawable.stat_notify_chat)
