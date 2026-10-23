@@ -12,6 +12,13 @@ The web client is the `mudrix-web` submodule; this repo only holds the native sh
   (AltStore, Sideloadly, TrollStore).
 - **CI:** `.github/workflows/android.yml` and `ios.yml` run on `v*` tags or manually.
 
+## Native code
+
+`src-tauri/gen/apple` is not committed (CI runs `tauri ios init`), so native iOS code lives in local
+Tauri plugins. `src-tauri/plugins/ios-webview` stops the WKWebView from scrolling or panning and
+resizes it to the area above the keyboard, like Android's `MainActivity` does; its contract with the
+web client is documented in its `src/lib.rs`.
+
 ## Releases
 
 `node scripts/set-version.mjs X.Y.Z` updates `package.json` and `Cargo.toml`;
