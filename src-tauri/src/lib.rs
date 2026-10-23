@@ -8,7 +8,6 @@
 mod commands;
 mod push;
 
-use tauri::Manager;
 use tauri_plugin_deep_link::DeepLinkExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -29,9 +28,8 @@ pub fn run() {
                 }
             });
             if let Ok(Some(urls)) = app.deep_link().get_current() {
-                let state = app.state::<commands::PendingNavigation>();
                 if let Some(url) = urls.first() {
-                    state.set(url.to_string());
+                    commands::open_deep_link(app.handle(), url.as_str());
                 }
             }
             Ok(())
