@@ -58,6 +58,8 @@ android {
     }
     buildTypes {
         getByName("debug") {
+            // -PmudrixDev: install beside the release app, which a local debug key cannot update.
+            if (project.hasProperty("mudrixDev")) applicationIdSuffix = ".dev"
             manifestPlaceholders["usesCleartextTraffic"] = "true"
             isDebuggable = true
             isJniDebuggable = true
