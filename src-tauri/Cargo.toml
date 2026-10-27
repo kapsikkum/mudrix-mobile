@@ -1,6 +1,6 @@
 [package]
 name = "mudrix-mobile"
-version = "26.10.17"
+version = "26.10.18"
 description = "Mudrix Mobile: the Mudrix web client in a Tauri shell for iOS and Android."
 authors = ["kapsikkum"]
 license = "AGPL-3.0-only"
