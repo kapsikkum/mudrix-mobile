@@ -1,8 +1,8 @@
 name: Android (APK)
 
 # Builds a release-signed APK when the ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
-# ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD repository secrets exist (see "Release signing" in the
-# README); otherwise falls back to a debug-signed APK, named as such.
+# ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD repository secrets exist (see "Android signing" in
+# RELEASING.md); otherwise falls back to a debug-signed APK, named as such.
 on:
   workflow_dispatch:
   push:
