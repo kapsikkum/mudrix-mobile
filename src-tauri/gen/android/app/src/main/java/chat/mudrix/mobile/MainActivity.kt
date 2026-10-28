@@ -22,6 +22,17 @@ class MainActivity : TauriActivity() {
   private companion object {
     const val EDGE_DP = 48
     const val EXCLUDE_HEIGHT_DP = 200
+
+    // What the web client last reported. The activity can be recreated while the page stays loaded
+    // (and the page only reports a colour when it changes), so the colours are kept here to put
+    // back behind the system bars instead of falling to the black default.
+    var lastTop: Int? = null
+    var lastBottom: Int? = null
+    var lastLightTop = false
+    var lastLightBottom = false
+
+    // The dark theme's bar colour, for before the page has reported anything.
+    const val DEFAULT_BACKGROUND = 0xFF1A1B1E.toInt()
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +45,17 @@ class MainActivity : TauriActivity() {
 
     if (PushStore.keepAlive(this)) KeepAliveService.apply(this, true)
 
-    window.setBackgroundDrawable(ColorDrawable(0xFF050505.toInt()))
+    val top = lastTop
+    val bottom = lastBottom
+    if (top != null && bottom != null) {
+      window.setBackgroundDrawable(TwoToneDrawable(top, bottom))
+      WindowCompat.getInsetsController(window, window.decorView).apply {
+        isAppearanceLightStatusBars = lastLightTop
+        isAppearanceLightNavigationBars = lastLightBottom
+      }
+    } else {
+      window.setBackgroundDrawable(ColorDrawable(DEFAULT_BACKGROUND))
+    }
 
     // Keep the web view out of the status bar, the camera cutout, the navigation/gesture bar and the
     // keyboard instead of drawing the app header underneath them.
@@ -89,6 +110,10 @@ class MainActivity : TauriActivity() {
       } catch (_: IllegalArgumentException) {
         return
       }
+      lastTop = topColor
+      lastBottom = bottomColor
+      lastLightTop = lightTop
+      lastLightBottom = lightBottom
       runOnUiThread {
         window.setBackgroundDrawable(TwoToneDrawable(topColor, bottomColor))
         WindowCompat.getInsetsController(window, window.decorView).apply {
