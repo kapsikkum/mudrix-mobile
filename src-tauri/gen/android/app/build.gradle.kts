@@ -35,6 +35,11 @@ val releaseKeyPassword = signingValue("keyPassword", "ANDROID_KEY_PASSWORD")
 val hasReleaseSigning = releaseStoreFile != null && releaseStorePassword != null &&
     releaseKeyAlias != null && releaseKeyPassword != null
 
+// A build for one ABI (--split-per-abi) gets its own versionCode, base * 10 + a per-ABI digit, so the
+// APKs of one release are distinct versions to F-Droid. An all-ABI build keeps base * 10.
+val abiVersionDigit = mapOf("armeabi-v7a" to 1, "arm64-v8a" to 2, "x86" to 3, "x86_64" to 4)
+val splitAbi = (findProperty("abiList") as? String)?.split(',')?.singleOrNull()
+
 android {
     compileSdk = 37
     namespace = "chat.mudrix.mobile"
@@ -43,7 +48,8 @@ android {
         applicationId = "chat.mudrix.mobile"
         minSdk = 24
         targetSdk = 37
-        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
+        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt() * 10 +
+            (abiVersionDigit[splitAbi] ?: 0)
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
     }
     signingConfigs {

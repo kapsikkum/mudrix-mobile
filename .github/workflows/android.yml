@@ -83,13 +83,13 @@ jobs:
           export ANDROID_KEYSTORE_PASSWORD="$KEYSTORE_PASSWORD"
           export ANDROID_KEY_ALIAS="$KEY_ALIAS"
           export ANDROID_KEY_PASSWORD="$KEY_PASSWORD"
-          npx tauri android build --apk
+          npx tauri android build --apk --split-per-abi --target aarch64 --target x86_64
 
       - name: Build the debug APK
         if: steps.signing.outputs.signed != 'true'
         run: |
           export NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
-          npx tauri android build --apk --debug
+          npx tauri android build --apk --debug --split-per-abi --target aarch64 --target x86_64
 
       - name: Collect
         env:
