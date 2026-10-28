@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.Rect
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -19,6 +20,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : TauriActivity() {
+  private var lastClaimed = -1
+
   private companion object {
     const val EDGE_DP = 48
     const val EXCLUDE_HEIGHT_DP = 200
@@ -71,22 +74,41 @@ class MainActivity : TauriActivity() {
     }
 
     // The side panels open by swiping in from the screen edges, which the system back gesture would
-    // otherwise take. Android lets an app claim at most 200dp of each edge, so the middle of both
-    // edges is kept for the app.
+    // otherwise take. Android lets an app claim at most 200dp of each edge, so the claimed stretch
+    // follows the finger: it is centred on where the screen was last touched (and on the middle of
+    // the screen until then), which is where the next edge swipe most likely starts.
     val decor = window.decorView
-    decor.addOnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
-      val density = decor.resources.displayMetrics.density
-      val edge = (EDGE_DP * density).toInt()
-      val half = (EXCLUDE_HEIGHT_DP * density / 2).toInt()
-      val mid = (top + bottom) / 2
-      ViewCompat.setSystemGestureExclusionRects(
-        decor,
-        listOf(
-          Rect(left, mid - half, left + edge, mid + half),
-          Rect(right - edge, mid - half, right, mid + half),
-        )
-      )
+    decor.addOnLayoutChangeListener { _, _, top, _, bottom, _, _, _, _ ->
+      claimEdges((top + bottom) / 2)
     }
+  }
+
+  /** Keeps the edges free of the back gesture around `centre` (a y in window pixels). */
+  private fun claimEdges(centre: Int) {
+    val decor = window.decorView
+    val density = decor.resources.displayMetrics.density
+    val edge = (EDGE_DP * density).toInt()
+    val half = (EXCLUDE_HEIGHT_DP * density / 2).toInt()
+    val height = decor.height
+    if (height <= 0) return
+    // Keep the whole stretch on screen, or Android would trim it.
+    val mid = centre.coerceIn(half, (height - half).coerceAtLeast(half))
+    if (mid == lastClaimed) return
+    lastClaimed = mid
+    ViewCompat.setSystemGestureExclusionRects(
+      decor,
+      listOf(
+        Rect(0, mid - half, edge, mid + half),
+        Rect(decor.width - edge, mid - half, decor.width, mid + half),
+      )
+    )
+  }
+
+  override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+    if (event.actionMasked == MotionEvent.ACTION_DOWN || event.actionMasked == MotionEvent.ACTION_UP) {
+      claimEdges(event.rawY.toInt())
+    }
+    return super.dispatchTouchEvent(event)
   }
 
   override fun onWebViewCreate(webView: WebView) {
