@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.ColorDrawable
+import android.graphics.Rect
 import android.os.Bundle
 import android.view.View
 import android.webkit.JavascriptInterface
@@ -18,6 +19,11 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : TauriActivity() {
+  private companion object {
+    const val EDGE_DP = 48
+    const val EXCLUDE_HEIGHT_DP = 200
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     // The web client is dark by default; light system-bar icons keep the clock and battery legible.
     enableEdgeToEdge(
@@ -41,6 +47,24 @@ class MainActivity : TauriActivity() {
       )
       view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
       WindowInsetsCompat.CONSUMED
+    }
+
+    // The side panels open by swiping in from the screen edges, which the system back gesture would
+    // otherwise take. Android lets an app claim at most 200dp of each edge, so the middle of both
+    // edges is kept for the app.
+    val decor = window.decorView
+    decor.addOnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
+      val density = decor.resources.displayMetrics.density
+      val edge = (EDGE_DP * density).toInt()
+      val half = (EXCLUDE_HEIGHT_DP * density / 2).toInt()
+      val mid = (top + bottom) / 2
+      ViewCompat.setSystemGestureExclusionRects(
+        decor,
+        listOf(
+          Rect(left, mid - half, left + edge, mid + half),
+          Rect(right - edge, mid - half, right, mid + half),
+        )
+      )
     }
   }
 
