@@ -43,6 +43,7 @@ class IosWebviewPlugin: Plugin {
     scrollView.contentInsetAdjustmentBehavior = .never
     scrollView.delegate = pinner
     scrollView.contentOffset = .zero
+    hideInputAccessory(of: webview)
 
     let center = NotificationCenter.default
     center.addObserver(
@@ -56,6 +57,32 @@ class IosWebviewPlugin: Plugin {
     center.addObserver(
       self, selector: #selector(keyboardDidChangeFrame(_:)),
       name: UIResponder.keyboardDidChangeFrameNotification, object: nil)
+  }
+
+  /// Removes the previous/next/done bar WebKit puts above the keyboard for form fields. The page has
+  /// no form to step through, and the bar takes room from the composer. WKWebView has no public switch
+  /// for it, so its content view (a private class) is given a subclass whose `inputAccessoryView` is nil.
+  private func hideInputAccessory(of webview: WKWebView) {
+    guard
+      let content = webview.scrollView.subviews.first(where: {
+        String(describing: type(of: $0)).hasPrefix("WKContent")
+      })
+    else { return }
+    let original: AnyClass = type(of: content)
+    let name = "\(original)_NoInputAccessory"
+    var subclass: AnyClass? = NSClassFromString(name)
+    if subclass == nil {
+      subclass = objc_allocateClassPair(original, name, 0)
+      guard let subclass = subclass,
+        let method = class_getInstanceMethod(UIResponder.self, #selector(getter: UIResponder.inputAccessoryView))
+      else { return }
+      let noAccessory: @convention(block) (AnyObject) -> UIView? = { _ in nil }
+      class_addMethod(
+        subclass, #selector(getter: UIResponder.inputAccessoryView),
+        imp_implementationWithBlock(noAccessory), method_getTypeEncoding(method))
+      objc_registerClassPair(subclass)
+    }
+    if let subclass = subclass { object_setClass(content, subclass) }
   }
 
   @objc private func keyboardWillChangeFrame(_ notification: Notification) {
