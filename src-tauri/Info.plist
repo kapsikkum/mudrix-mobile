@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Merged into the iOS Info.plist by the Tauri CLI. Without these, iOS never lets the web view
+	     use the microphone or camera, so voice and video calls cannot start. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Mudrix uses the microphone for voice and video calls.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Mudrix uses the camera for video calls and to scan sign-in QR codes.</string>
+</dict>
+</plist>
