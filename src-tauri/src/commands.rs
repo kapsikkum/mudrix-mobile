@@ -145,6 +145,18 @@ pub fn open_auth_in_browser(app: AppHandle, url: String) -> Result<(), String> {
     open_external(app, url)
 }
 
+/// Characters that draw nothing or reorder what is drawn (right-to-left overrides and isolates, zero-width
+/// and joiner characters, the byte order mark): in a file name they can make `evil.exe` read as another
+/// name with another extension.
+fn is_invisible_format(c: char) -> bool {
+    matches!(c,
+        '\u{200B}'..='\u{200F}'
+        | '\u{202A}'..='\u{202E}'
+        | '\u{2060}'..='\u{2064}'
+        | '\u{2066}'..='\u{206F}'
+        | '\u{FEFF}')
+}
+
 /// Keeps a file name safe to create: no directories, no characters Windows rejects.
 fn sanitize_file_name(raw: &str) -> String {
     let name: String = raw
@@ -154,7 +166,7 @@ fn sanitize_file_name(raw: &str) -> String {
         .chars()
         .map(|c| match c {
             '<' | '>' | ':' | '"' | '|' | '?' | '*' => '_',
-            c if c.is_control() => '_',
+            c if c.is_control() || is_invisible_format(c) => '_',
             c => c,
         })
         .collect();
