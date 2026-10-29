@@ -2131,7 +2131,7 @@ dependencies = [
 
 [[package]]
 name = "mudrix-mobile"
-version = "26.10.18"
+version = "26.10.19"
 dependencies = [
  "serde",
  "serde_json",

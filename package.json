@@ -1,7 +1,7 @@
 {
   "name": "mudrix-mobile",
   "productName": "Mudrix",
-  "version": "26.10.18",
+  "version": "26.10.19",
   "private": true,
   "description": "Mudrix Mobile: the Mudrix web client in a Tauri v2 shell for iOS and Android",
   "homepage": "https://github.com/kapsikkum/mudrix-mobile",
