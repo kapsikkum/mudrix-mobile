@@ -8,5 +8,19 @@
 	<string>Mudrix uses the microphone for voice and video calls.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Mudrix uses the camera for video calls and to scan sign-in QR codes.</string>
+	<!-- "Stay connected in the background": iOS has no push without a paid Apple developer account, so
+	     the app keeps itself running and raises local notifications. `audio` backs the default strategy
+	     (a silent session); `location` backs the optional one and needs the usage strings below. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>location</string>
+	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Mudrix can use coarse location updates only to stay connected in the background so you get message notifications. Your location is never read or sent anywhere.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Mudrix can use coarse location updates only to stay connected in the background so you get message notifications. Your location is never read or sent anywhere.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Mudrix can use coarse location updates only to stay connected in the background so you get message notifications. Your location is never read or sent anywhere.</string>
 </dict>
 </plist>

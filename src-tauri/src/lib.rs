@@ -18,6 +18,10 @@ pub fn run() {
     // No scrolling or panning of the web view, and a web view that ends at the keyboard.
     #[cfg(target_os = "ios")]
     let builder = builder.plugin(tauri_plugin_ios_webview::init());
+    // Background keep-alive (silent audio or coarse location), the iOS counterpart of Android's
+    // keep-alive foreground service. Driven by the push_* commands.
+    #[cfg(target_os = "ios")]
+    let builder = builder.plugin(tauri_plugin_ios_keepalive::init());
     builder
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_notification::init())

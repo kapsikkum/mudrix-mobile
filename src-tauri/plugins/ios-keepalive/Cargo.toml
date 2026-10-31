@@ -1,0 +1,18 @@
+[package]
+name = "tauri-plugin-ios-keepalive"
+version = "0.1.0"
+description = "Mudrix Mobile: keeps the app (and its web view's Matrix sync) alive in the iOS background."
+authors = ["kapsikkum"]
+license = "AGPL-3.0-only"
+edition = "2021"
+rust-version = "1.77"
+publish = false
+# Required by tauri-plugin's build helper; it must match the package name.
+links = "tauri-plugin-ios-keepalive"
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde_json = "1"
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }

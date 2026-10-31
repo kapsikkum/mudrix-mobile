@@ -2138,6 +2138,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-deep-link",
+ "tauri-plugin-ios-keepalive",
  "tauri-plugin-ios-webview",
  "tauri-plugin-notification",
  "tauri-plugin-opener",
@@ -3652,6 +3653,15 @@ dependencies = [
  "url",
  "windows-registry",
  "windows-result",
+]
+
+[[package]]
+name = "tauri-plugin-ios-keepalive"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
 ]
 
 [[package]]
