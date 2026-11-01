@@ -34,6 +34,45 @@ For a local signed build, put `storeFile`, `storePassword`, `keyAlias` and `keyP
 `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` environment variables,
 then run `npx tauri android build --apk`.
 
+## Pre-releases from `next`
+
+Test builds come from the `next` branch and use a suffixed version of the release they lead up to:
+
+```
+26.11.0-next.1  <  26.11.0-next.2  <  26.11.0-rc.1  <  26.11.0
+```
+
+Use the **same version string as the web client and the desktop app**. A tag with a `-` in it
+(`v26.11.0-next.1`, `-rc.1`, `-beta.1`) is published as a **pre-release**, not "latest": both workflows set
+that from the tag. Both still build and attach their file (`Mudrix-...apk`, `Mudrix-unsigned.ipa`).
+
+1. Release the web client first (`RELEASING.md` in `mudrix-web`) and push its tag; the commit has to be on
+   GitHub before CI can check it out.
+2. On `next`, point the submodule at the web commit or tag you just released:
+   ```sh
+   git checkout next
+   git -C mudrix-web fetch origin
+   git -C mudrix-web checkout v26.11.0-next.1
+   git add mudrix-web
+   ```
+3. Set the version and commit (`set-version` updates `package.json`, `Cargo.toml` and `Cargo.lock`, then
+   runs `check-version`):
+   ```sh
+   node scripts/set-version.mjs 26.11.0-next.1
+   git commit -am "chore(release): prepare v26.11.0-next.1"
+   ```
+4. `git tag v26.11.0-next.1 && git push origin next v26.11.0-next.1`.
+
+Both workflows also have **Run workflow** (`workflow_dispatch`) for a build from a branch without a tag; there
+the files are only uploaded as run artifacts, not attached to a release.
+
+**Android version code.** Tauri derives it from the numeric part of the version (`major * 1000000 + minor *
+1000 + patch`, so 26.10.19 is 26010019) and ignores the suffix. Every `26.11.0-next.N` and the stable `26.11.0`
+therefore share the code 26011000: a pre-release installs over 26.10.19 (a higher code), but installing the next
+pre-release over the previous one relies on Android accepting an equal code from the package installer.
+That has not been tried; if it refuses, uninstall first (app data is lost) or bump the patch number for test
+builds (`26.11.1-next.1`).
+
 ## iOS
 
 The IPA is unsigned. Users sideload it with a tool that signs it for their own device.

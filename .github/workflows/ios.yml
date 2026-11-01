@@ -104,6 +104,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          # v26.11.0-next.1, -rc.1, -beta.1: a pre-release, not "latest"
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             Mudrix-unsigned.ipa
             Mudrix-unsigned.ipa.sha256
